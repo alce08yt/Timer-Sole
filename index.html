@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#151b33">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title id="pageTitle">Location-Based Tanning Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-deep:#151b33; --sky-mid:#2b3763; --gold:#f2a93b; --ember:#e5533d;
+    --cream:#f6f1e4; --cream-dim:#cfc6ae; --card:#1e2645; --card-line:#3a4470; --safe:#5fb98c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(120% 90% at 50% -10%, var(--sky-mid) 0%, var(--sky-deep) 55%, #0c0f1e 100%);
+    color:var(--cream); font-family:'Space Grotesk', sans-serif; min-height:100vh; padding:24px 16px 64px;
+  }
+  h1,h2,.display{ font-family:'Fraunces', serif; font-weight:700; letter-spacing:-0.01em; }
+  .wrap{max-width:520px;margin:0 auto;}
+  header{text-align:center;margin-bottom:20px;}
+  .lang-row{display:flex;justify-content:center;margin-bottom:16px;}
+  select#langSelect{
+    background:#1e2645;color:var(--cream);border:1px solid var(--card-line);
+    border-radius:999px;padding:6px 14px;font-family:'Space Grotesk';font-size:12px;
+  }
+  header .eyebrow{ text-transform:uppercase; letter-spacing:0.18em; font-size:11px; color:var(--gold); margin-bottom:8px; }
+  header h1{font-size:28px;margin:0 0 6px;color:var(--cream);}
+  header p{font-size:13px;color:var(--cream-dim);margin:0;line-height:1.5;}
+  .card{ background:var(--card); border:1px solid var(--card-line); border-radius:18px; padding:20px; margin-bottom:16px; }
+  .card h2{font-size:16px;margin:0 0 12px;color:var(--gold);font-weight:600;}
+  .skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .skin-btn{
+    background:#161d38; border:1px solid var(--card-line); border-radius:12px; padding:10px 6px;
+    color:var(--cream); font-family:'Space Grotesk'; cursor:pointer; text-align:center; transition:all .15s ease;
+  }
+  .skin-btn .swatch{ width:26px;height:26px;border-radius:50%; margin:0 auto 6px; border:2px solid rgba(255,255,255,0.25); }
+  .skin-btn small{display:block;font-size:10px;color:var(--cream-dim);margin-top:2px;}
+  .skin-btn.active{border-color:var(--gold);background:#26305a;box-shadow:0 0 0 1px var(--gold) inset;}
+  .loc-row{display:flex;gap:8px;flex-wrap:wrap;}
+  button.action{
+    background:var(--gold); color:#1a1200; border:none; border-radius:10px; padding:10px 16px;
+    font-family:'Space Grotesk'; font-weight:700; cursor:pointer; font-size:13px;
+  }
+  button.action.secondary{ background:transparent; color:var(--cream); border:1px solid var(--card-line); font-weight:500; }
+  input.uv-manual{
+    background:#161d38;border:1px solid var(--card-line);border-radius:10px;
+    color:var(--cream);padding:10px;font-family:'Space Grotesk';width:90px;font-size:14px;
+  }
+  input.city-search{
+    background:#161d38;border:1px solid var(--card-line);border-radius:10px;
+    color:var(--cream);padding:10px;font-family:'Space Grotesk';flex:1;font-size:14px;min-width:140px;
+  }
+  .status-line{font-size:12px;color:var(--cream-dim);margin-top:10px;line-height:1.5;}
+  .city-results{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .city-option{
+    background:#161d38;border:1px solid var(--card-line);border-radius:10px;
+    padding:8px 12px;font-size:13px;cursor:pointer;text-align:left;
+  }
+  .city-option:hover{border-color:var(--gold);}
+  #arcSvg{width:100%;height:auto;display:block;}
+  .arc-legend{display:flex;justify-content:space-between;font-size:10px;color:var(--cream-dim);margin-top:4px;}
+  .timer-face{ position:relative;width:220px;height:220px;margin:8px auto 4px; }
+  .timer-face svg{transform:rotate(-90deg);}
+  .timer-center{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+  }
+  .timer-center .side-label{font-family:'Fraunces';font-size:22px;font-weight:700;color:var(--gold);}
+  .timer-center .time-left{font-size:34px;font-weight:700;margin-top:2px;}
+  .timer-center .uv-tag{font-size:11px;color:var(--cream-dim);margin-top:4px;}
+  .timer-controls{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+  .disclaimer{ font-size:11px;color:var(--cream-dim);line-height:1.6; border-top:1px solid var(--card-line);padding-top:12px;margin-top:6px; }
+  .hidden{display:none !important;}
+  .pill{ display:inline-block;background:#26305a;border:1px solid var(--card-line); border-radius:999px;padding:3px 10px;font-size:11px;color:var(--cream-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lang-row">
+    <select id="langSelect">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="pt-BR">Português (BR)</option>
+      <option value="it">Italiano</option>
+      <option value="fr">Français</option>
+    </select>
+  </div>
+
+  <header>
+    <div class="eyebrow" id="txtEyebrow"></div>
+    <h1 id="txtH1"></h1>
+    <p id="txtSubtitle"></p>
+  </header>
+
+  <div class="card">
+    <h2 id="txtSkinSectionTitle"></h2>
+    <div class="skin-grid" id="skinGrid"></div>
+    <div class="status-line" id="skinDesc"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="txtUvSectionTitle"></h2>
+    <div class="loc-row">
+      <button class="action" id="btnLoc"></button>
+      <button class="action secondary" id="btnManual"></button>
+    </div>
+    <div class="loc-row" style="margin-top:10px;">
+      <input type="text" class="city-search" id="citySearch">
+      <button class="action secondary" id="btnCitySearch"></button>
+    </div>
+    <div class="city-results" id="cityResults"></div>
+    <div class="loc-row hidden" id="manualRow" style="margin-top:10px;">
+      <input type="number" class="uv-manual" id="manualUv" placeholder="UV" min="0" max="14" step="1">
+      <button class="action" id="btnManualGo"></button>
+    </div>
+    <div class="status-line" id="locStatus"></div>
+  </div>
+
+  <div class="card hidden" id="arcCard">
+    <h2 id="txtArcTitle"></h2>
+    <svg id="arcSvg" viewBox="0 0 400 140"></svg>
+    <div class="arc-legend"><span>6 AM</span><span>12 PM</span><span>8 PM</span></div>
+  </div>
+
+  <div class="card hidden" id="timerCard">
+    <h2><span id="txtTimerSectionTitle"></span> <span class="pill" id="uvNowPill">UV —</span></h2>
+    <div class="timer-face">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="98" stroke="#3a4470" stroke-width="10" fill="none"/>
+        <circle id="progressRing" cx="110" cy="110" r="98" stroke="#f2a93b" stroke-width="10" fill="none"
+          stroke-linecap="round" stroke-dasharray="616" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-center">
+        <div class="side-label" id="sideLabel"></div>
+        <div class="time-left" id="timeLeft">00:00</div>
+        <div class="uv-tag" id="segTag"></div>
+      </div>
+    </div>
+    <div class="timer-controls">
+      <button class="action" id="btnStartPause"></button>
+      <button class="action secondary" id="btnFlipNow"></button>
+      <button class="action secondary" id="btnReset"></button>
+    </div>
+    <div class="status-line" id="timerNote"></div>
+  </div>
+
+  <div class="card">
+    <div class="disclaimer" id="txtDisclaimer"></div>
+  </div>
+</div>
+
+<script>
+// ================= i18n =================
+const TRANSLATIONS = {
+  en: {
+    eyebrow: "Solar Arc · Front / Back Rotation",
+    h1: "Tanning Timer",
+    subtitle: "Based on the Fitzpatrick skin scale and the real UV index at your location.<br>Tells you when to flip, not just when to stop.",
+    skinSectionTitle: "1 · Your skin type",
+    skinDescDefault: "Select your skin phototype to get started.",
+    uvSectionTitle: "2 · Today's UV index",
+    btnLoc: "📍 Use my location",
+    btnManual: "Enter UV manually",
+    citySearchPlaceholder: "Or search a city (e.g. Miami, FL)",
+    btnCitySearch: "Search",
+    btnManualGo: "Use this value",
+    locStatusDefault: "Waiting for location, a city search, or a manual UV value.",
+    arcTitle: "Today's UV curve",
+    timerSectionTitle: "3 · Rotation timer",
+    sideBack: "Back", sideFront: "Front (face up)",
+    segTag: "{mins} min recommended per side",
+    btnStart: "Start", btnPause: "Pause", btnResume: "Resume", btnFlipNow: "Flip now", btnReset: "Reset",
+    disclaimer: "Warning: this is an approximate estimate based on standard dermatological formulas (minimum erythemal dose per phototype). It does not replace advice from a dermatologist. Always use sun protection, stay hydrated, and stop exposure if your skin becomes red or painful. Tanning beds are never safe; this timer is for natural sunlight exposure only.",
+    requestingLocation: "Requesting location...",
+    geoUnavailable: "Geolocation is not available on this device. Use manual entry or city search.",
+    locationFound: "Location found ({lat}, {lon}).",
+    locationDenied: "Location denied or unavailable. Try city search or manual entry.",
+    fetchingUv: "{label} Fetching UV data...",
+    uvLoaded: "{label} Today's UV data loaded.",
+    uvDownloadFailed: "Could not download UV data. Try the manual entry instead.",
+    manualUvSet: "Manual UV value set: {v}.",
+    searchingCities: "Searching cities...",
+    noCitiesFound: "No cities found. Try a different spelling.",
+    selectCity: "Select a city:",
+    citySearchFailed: "City search failed. Check your connection or try manual UV entry.",
+    selectSkinFirst: "Select your skin type and a UV value first.",
+    flipWarningNote: "1 minute left: flip to {side}.",
+    flippedNote: "Flipped! Now exposing: {side}.",
+    notifStatusTitle: "Tanning Timer",
+    notifStatusBody: "{side} - {time} left",
+    notifWarningTitle: "Flip coming up",
+    notifWarningBody: "1 minute left: switch to {side}",
+    notifFlipTitle: "Flip now",
+    notifFlipBody: "Switch to: {side}",
+    skinTypes: [
+      {name:'Very fair', desc:'Very fair skin, often freckled, light eyes. Almost always burns, tans minimally.'},
+      {name:'Fair', desc:'Fair skin. Burns easily, tans minimally and slowly.'},
+      {name:'Medium', desc:'Medium/olive skin. Burns moderately, tans gradually.'},
+      {name:'Olive', desc:'Olive skin. Rarely burns, tans well.'},
+      {name:'Brown', desc:'Brown skin. Very rarely burns.'},
+      {name:'Deep', desc:'Deeply pigmented skin. Rarely if ever burns.'}
+    ]
+  },
+  es: {
+    eyebrow: "Arco Solar · Rotación Espalda/Frente",
+    h1: "Temporizador de Bronceado",
+    subtitle: "Basado en la escala de Fitzpatrick y el índice UV real de tu ubicación.<br>Te dice cuándo girarte, no solo cuándo parar.",
+    skinSectionTitle: "1 · Tu tipo de piel",
+    skinDescDefault: "Selecciona tu fototipo de piel para empezar.",
+    uvSectionTitle: "2 · Índice UV de hoy",
+    btnLoc: "📍 Usar mi ubicación",
+    btnManual: "Introducir UV manualmente",
+    citySearchPlaceholder: "O busca una ciudad (ej. Ciudad de México)",
+    btnCitySearch: "Buscar",
+    btnManualGo: "Usar este valor",
+    locStatusDefault: "Esperando ubicación, búsqueda de ciudad o valor UV manual.",
+    arcTitle: "Curva UV de hoy",
+    timerSectionTitle: "3 · Temporizador de rotación",
+    sideBack: "Espalda", sideFront: "Boca arriba",
+    segTag: "{mins} min recomendados por lado",
+    btnStart: "Iniciar", btnPause: "Pausar", btnResume: "Reanudar", btnFlipNow: "Girar ahora", btnReset: "Reiniciar",
+    disclaimer: "Aviso: esta es una estimación aproximada basada en fórmulas dermatológicas estándar (dosis eritemal mínima por fototipo). No sustituye el consejo de un dermatólogo. Usa siempre protección solar, mantente hidratado y detén la exposición si tu piel se enrojece o duele. Las camas solares nunca son seguras; este temporizador es solo para exposición solar natural.",
+    requestingLocation: "Solicitando ubicación...",
+    geoUnavailable: "La geolocalización no está disponible en este dispositivo. Usa entrada manual o búsqueda de ciudad.",
+    locationFound: "Ubicación encontrada ({lat}, {lon}).",
+    locationDenied: "Ubicación denegada o no disponible. Prueba la búsqueda de ciudad o la entrada manual.",
+    fetchingUv: "{label} Descargando datos UV...",
+    uvLoaded: "{label} Datos UV de hoy cargados.",
+    uvDownloadFailed: "No se pudieron descargar los datos UV. Prueba la entrada manual.",
+    manualUvSet: "Valor UV manual establecido: {v}.",
+    searchingCities: "Buscando ciudades...",
+    noCitiesFound: "No se encontraron ciudades. Prueba otra ortografía.",
+    selectCity: "Selecciona una ciudad:",
+    citySearchFailed: "La búsqueda de ciudad falló. Revisa tu conexión o usa la entrada manual.",
+    selectSkinFirst: "Selecciona primero tu tipo de piel y un valor UV.",
+    flipWarningNote: "Queda 1 minuto: gírate a {side}.",
+    flippedNote: "¡Girado! Ahora expones: {side}.",
+    notifStatusTitle: "Temporizador de Bronceado",
+    notifStatusBody: "{side} - quedan {time}",
+    notifWarningTitle: "Próximo giro",
+    notifWarningBody: "Queda 1 minuto: cambia a {side}",
+    notifFlipTitle: "Gira ahora",
+    notifFlipBody: "Cambia a: {side}",
+    skinTypes: [
+      {name:'Muy clara', desc:'Piel muy clara, a menudo con pecas, ojos claros. Casi siempre se quema, se broncea muy poco.'},
+      {name:'Clara', desc:'Piel clara. Se quema fácilmente, bronceado mínimo y lento.'},
+      {name:'Media', desc:'Piel media/olivácea. Se quema moderadamente, se broncea gradualmente.'},
+      {name:'Olivácea', desc:'Piel olivácea. Rara vez se quema, se broncea bien.'},
+      {name:'Morena', desc:'Piel morena. Muy rara vez se quema.'},
+      {name:'Muy oscura', desc:'Piel muy pigmentada. Casi nunca se quema.'}
+    ]
+  },
+  'pt-BR': {
+    eyebrow: "Arco Solar · Rotação Costas/Frente",
+    h1: "Timer de Bronzeado",
+    subtitle: "Baseado na escala de Fitzpatrick e no índice UV real da sua localização.<br>Diz quando virar, não só quando parar.",
+    skinSectionTitle: "1 · Seu tipo de pele",
+    skinDescDefault: "Selecione seu fototipo de pele para começar.",
+    uvSectionTitle: "2 · Índice UV de hoje",
+    btnLoc: "📍 Usar minha localização",
+    btnManual: "Inserir UV manualmente",
+    citySearchPlaceholder: "Ou busque uma cidade (ex. São Paulo)",
+    btnCitySearch: "Buscar",
+    btnManualGo: "Usar este valor",
+    locStatusDefault: "Aguardando localização, busca de cidade ou valor UV manual.",
+    arcTitle: "Curva UV de hoje",
+    timerSectionTitle: "3 · Timer de rotação",
+    sideBack: "Costas", sideFront: "De frente (barriga pra cima)",
+    segTag: "{mins} min recomendados por lado",
+    btnStart: "Iniciar", btnPause: "Pausar", btnResume: "Retomar", btnFlipNow: "Virar agora", btnReset: "Reiniciar",
+    disclaimer: "Aviso: esta é uma estimativa aproximada baseada em fórmulas dermatológicas padrão (dose eritematosa mínima por fototipo). Não substitui o conselho de um dermatologista. Use sempre proteção solar, mantenha-se hidratado e interrompa a exposição se a pele ficar vermelha ou dolorida. Câmaras de bronzeamento nunca são seguras; este timer é apenas para exposição solar natural.",
+    requestingLocation: "Solicitando localização...",
+    geoUnavailable: "Geolocalização não disponível neste dispositivo. Use entrada manual ou busca de cidade.",
+    locationFound: "Localização encontrada ({lat}, {lon}).",
+    locationDenied: "Localização negada ou indisponível. Tente a busca de cidade ou entrada manual.",
+    fetchingUv: "{label} Baixando dados de UV...",
+    uvLoaded: "{label} Dados de UV de hoje carregados.",
+    uvDownloadFailed: "Não foi possível baixar os dados de UV. Tente a entrada manual.",
+    manualUvSet: "Valor de UV manual definido: {v}.",
+    searchingCities: "Buscando cidades...",
+    noCitiesFound: "Nenhuma cidade encontrada. Tente outra grafia.",
+    selectCity: "Selecione uma cidade:",
+    citySearchFailed: "A busca de cidade falhou. Verifique sua conexão ou use a entrada manual.",
+    selectSkinFirst: "Selecione primeiro seu tipo de pele e um valor UV.",
+    flipWarningNote: "Falta 1 minuto: vire para {side}.",
+    flippedNote: "Virado! Agora expondo: {side}.",
+    notifStatusTitle: "Timer de Bronzeado",
+    notifStatusBody: "{side} - faltam {time}",
+    notifWarningTitle: "Virada chegando",
+    notifWarningBody: "Falta 1 minuto: mude para {side}",
+    notifFlipTitle: "Vire agora",
+    notifFlipBody: "Mude para: {side}",
+    skinTypes: [
+      {name:'Muito clara', desc:'Pele muito clara, geralmente com sardas, olhos claros. Quase sempre queima, bronzeia muito pouco.'},
+      {name:'Clara', desc:'Pele clara. Queima facilmente, bronzeamento mínimo e lento.'},
+      {name:'Média', desc:'Pele média/morena clara. Queima moderadamente, bronzeia gradualmente.'},
+      {name:'Morena', desc:'Pele morena. Raramente queima, bronzeia bem.'},
+      {name:'Morena escura', desc:'Pele morena escura. Queima muito raramente.'},
+      {name:'Negra', desc:'Pele bem pigmentada. Quase nunca queima.'}
+    ]
+  },
+  it: {
+    eyebrow: "Arco Solare · Rotazione Schiena/Fronte",
+    h1: "Timer Abbronzatura",
+    subtitle: "Basato sulla scala Fitzpatrick e sull'indice UV reale della tua posizione.<br>Ti dice quando girarti, non solo quando smettere.",
+    skinSectionTitle: "1 · Il tuo tipo di pelle",
+    skinDescDefault: "Seleziona il tuo fototipo per iniziare.",
+    uvSectionTitle: "2 · Indice UV di oggi",
+    btnLoc: "📍 Usa la mia posizione",
+    btnManual: "Inserisci UV a mano",
+    citySearchPlaceholder: "Oppure cerca una città (es. Roma)",
+    btnCitySearch: "Cerca",
+    btnManualGo: "Usa questo valore",
+    locStatusDefault: "In attesa della posizione, di una città o di un valore UV manuale.",
+    arcTitle: "Curva UV della giornata",
+    timerSectionTitle: "3 · Timer di rotazione",
+    sideBack: "Schiena", sideFront: "Pancia in su",
+    segTag: "{mins} min consigliati per lato",
+    btnStart: "Inizia", btnPause: "Pausa", btnResume: "Riprendi", btnFlipNow: "Gira ora", btnReset: "Reset",
+    disclaimer: "Attenzione: stima orientativa basata su formule dermatologiche standard (dose eritemale minima per fototipo), non sostituisce il parere di un dermatologo. Applica sempre protezione solare, bevi acqua e interrompi l'esposizione se la pelle diventa rossa o dolorante. I lettini abbronzanti non sono mai sicuri; questo timer riguarda solo l'esposizione solare naturale.",
+    requestingLocation: "Richiesta posizione in corso...",
+    geoUnavailable: "Geolocalizzazione non disponibile su questo dispositivo. Usa l'inserimento manuale o la ricerca città.",
+    locationFound: "Posizione trovata ({lat}, {lon}).",
+    locationDenied: "Posizione negata o non disponibile. Prova con la ricerca città o l'inserimento manuale.",
+    fetchingUv: "{label} Scarico dati UV...",
+    uvLoaded: "{label} Dati UV di oggi caricati.",
+    uvDownloadFailed: "Non sono riuscito a scaricare i dati UV. Prova con l'inserimento manuale.",
+    manualUvSet: "Valore UV manuale impostato: {v}.",
+    searchingCities: "Ricerca città in corso...",
+    noCitiesFound: "Nessuna città trovata. Prova un'altra grafia.",
+    selectCity: "Seleziona una città:",
+    citySearchFailed: "Ricerca città fallita. Controlla la connessione o usa l'inserimento manuale.",
+    selectSkinFirst: "Seleziona prima il fototipo e un valore UV.",
+    flipWarningNote: "Tra 1 minuto: gira su {side}.",
+    flippedNote: "Girato! Ora esponi: {side}.",
+    notifStatusTitle: "Timer Abbronzatura",
+    notifStatusBody: "{side} - resta {time}",
+    notifWarningTitle: "Cambio in arrivo",
+    notifWarningBody: "Tra 1 minuto: passa a {side}",
+    notifFlipTitle: "Gira ora",
+    notifFlipBody: "Passa a: {side}",
+    skinTypes: [
+      {name:'Molto chiara', desc:'Pelle molto chiara, spesso lentiggini, occhi chiari. Scotta quasi sempre, si abbronza pochissimo.'},
+      {name:'Chiara', desc:'Pelle chiara. Scotta facilmente, abbronzatura minima e lenta.'},
+      {name:'Media', desc:'Pelle olivastra/media. Scotta moderatamente, si abbronza gradualmente.'},
+      {name:'Olivastra scura', desc:'Pelle olivastra scura. Scotta raramente, si abbronza bene.'},
+      {name:'Scura', desc:'Pelle scura. Scotta molto raramente.'},
+      {name:'Molto scura', desc:'Pelle molto scura. Scotta eccezionalmente.'}
+    ]
+  },
+  fr: {
+    eyebrow: "Arc Solaire · Rotation Dos/Ventre",
+    h1: "Minuteur de Bronzage",
+    subtitle: "Basé sur l'échelle de Fitzpatrick et l'indice UV réel de votre position.<br>Vous dit quand vous retourner, pas seulement quand arrêter.",
+    skinSectionTitle: "1 · Votre type de peau",
+    skinDescDefault: "Sélectionnez votre phototype pour commencer.",
+    uvSectionTitle: "2 · Indice UV du jour",
+    btnLoc: "📍 Utiliser ma position",
+    btnManual: "Saisir l'UV manuellement",
+    citySearchPlaceholder: "Ou cherchez une ville (ex. Nice)",
+    btnCitySearch: "Chercher",
+    btnManualGo: "Utiliser cette valeur",
+    locStatusDefault: "En attente de la position, d'une recherche de ville ou d'une valeur UV manuelle.",
+    arcTitle: "Courbe UV du jour",
+    timerSectionTitle: "3 · Minuteur de rotation",
+    sideBack: "Dos", sideFront: "Ventre (face au soleil)",
+    segTag: "{mins} min conseillées par côté",
+    btnStart: "Démarrer", btnPause: "Pause", btnResume: "Reprendre", btnFlipNow: "Retourner maintenant", btnReset: "Réinitialiser",
+    disclaimer: "Attention : ceci est une estimation approximative basée sur des formules dermatologiques standard (dose érythémale minimale par phototype). Cela ne remplace pas l'avis d'un dermatologue. Utilisez toujours une protection solaire, restez hydraté et arrêtez l'exposition si votre peau devient rouge ou douloureuse. Les cabines de bronzage ne sont jamais sûres ; ce minuteur concerne uniquement l'exposition au soleil naturel.",
+    requestingLocation: "Demande de position en cours...",
+    geoUnavailable: "La géolocalisation n'est pas disponible sur cet appareil. Utilisez la saisie manuelle ou la recherche de ville.",
+    locationFound: "Position trouvée ({lat}, {lon}).",
+    locationDenied: "Position refusée ou indisponible. Essayez la recherche de ville ou la saisie manuelle.",
+    fetchingUv: "{label} Téléchargement des données UV...",
+    uvLoaded: "{label} Données UV du jour chargées.",
+    uvDownloadFailed: "Impossible de télécharger les données UV. Essayez la saisie manuelle.",
+    manualUvSet: "Valeur UV manuelle définie : {v}.",
+    searchingCities: "Recherche de villes...",
+    noCitiesFound: "Aucune ville trouvée. Essayez une autre orthographe.",
+    selectCity: "Sélectionnez une ville :",
+    citySearchFailed: "La recherche de ville a échoué. Vérifiez votre connexion ou utilisez la saisie manuelle.",
+    selectSkinFirst: "Sélectionnez d'abord votre type de peau et une valeur UV.",
+    flipWarningNote: "1 minute restante : retournez-vous côté {side}.",
+    flippedNote: "Retourné ! Vous exposez maintenant : {side}.",
+    notifStatusTitle: "Minuteur de Bronzage",
+    notifStatusBody: "{side} - reste {time}",
+    notifWarningTitle: "Retournement à venir",
+    notifWarningBody: "1 minute restante : passez à {side}",
+    notifFlipTitle: "Retournez-vous",
+    notifFlipBody: "Passez à : {side}",
+    skinTypes: [
+      {name:'Très claire', desc:'Peau très claire, souvent avec des taches de rousseur, yeux clairs. Brûle presque toujours, bronze très peu.'},
+      {name:'Claire', desc:'Peau claire. Brûle facilement, bronzage minimal et lent.'},
+      {name:'Moyenne', desc:'Peau moyenne/mate. Brûle modérément, bronze progressivement.'},
+      {name:'Mate', desc:'Peau mate. Brûle rarement, bronze bien.'},
+      {name:'Brune', desc:'Peau brune. Brûle très rarement.'},
+      {name:'Foncée', desc:'Peau très pigmentée. Ne brûle presque jamais.'}
+    ]
+  }
+};
+
+let currentLang = 'en';
+
+function detectLang(){
+  const nav = (navigator.language || 'en').toLowerCase();
+  if (nav.startsWith('pt')) return 'pt-BR';
+  if (nav.startsWith('es')) return 'es';
+  if (nav.startsWith('it')) return 'it';
+  if (nav.startsWith('fr')) return 'fr';
+  return 'en';
+}
+
+function t(key, vars){
+  const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  let str = dict[key] !== undefined ? dict[key] : TRANSLATIONS.en[key];
+  if (vars) Object.keys(vars).forEach(k => { str = str.replace(`{${k}}`, vars[k]); });
+  return str;
+}
+
+async function loadSavedLang(){
+  try {
+    if (window.storage) {
+      const res = await window.storage.get('lang');
+      if (res && res.value && TRANSLATIONS[res.value]) return res.value;
+    }
+  } catch(e){}
+  return null;
+}
+
+function applyStaticText(){
+  document.getElementById('pageTitle').textContent = t('h1');
+  document.getElementById('txtEyebrow').textContent = t('eyebrow');
+  document.getElementById('txtH1').textContent = t('h1');
+  document.getElementById('txtSubtitle').innerHTML = t('subtitle');
+  document.getElementById('txtSkinSectionTitle').textContent = t('skinSectionTitle');
+  document.getElementById('txtUvSectionTitle').textContent = t('uvSectionTitle');
+  document.getElementById('btnLoc').textContent = t('btnLoc');
+  document.getElementById('btnManual').textContent = t('btnManual');
+  document.getElementById('citySearch').placeholder = t('citySearchPlaceholder');
+  document.getElementById('btnCitySearch').textContent = t('btnCitySearch');
+  document.getElementById('btnManualGo').textContent = t('btnManualGo');
+  document.getElementById('locStatus').textContent = t('locStatusDefault');
+  document.getElementById('txtArcTitle').textContent = t('arcTitle');
+  document.getElementById('txtTimerSectionTitle').textContent = t('timerSectionTitle');
+  document.getElementById('btnFlipNow').textContent = t('btnFlipNow');
+  document.getElementById('btnReset').textContent = t('btnReset');
+  document.getElementById('txtDisclaimer').textContent = t('disclaimer');
+  document.getElementById('btnStartPause').textContent = timerState.running ? t('btnPause') : t('btnStart');
+  document.getElementById('sideLabel').textContent = timerState.side === 'back' ? t('sideBack') : t('sideFront');
+  document.getElementById('skinDesc').textContent = selectedSkin
+    ? TRANSLATIONS[currentLang].skinTypes[selectedSkin.id-1].desc
+    : t('skinDescDefault');
+
+  // rebuild skin grid labels in current language
+  document.querySelectorAll('.skin-btn').forEach((btn, i) => {
+    const nameEl = btn.querySelector('small');
+    if (nameEl) nameEl.textContent = TRANSLATIONS[currentLang].skinTypes[i].name;
+  });
+
+  if (timerState.totalSeconds) {
+    const mins = Math.round(timerState.totalSeconds/60);
+    document.getElementById('segTag').textContent = t('segTag', {mins});
+  }
+}
+
+document.getElementById('langSelect').addEventListener('change', async (e) => {
+  currentLang = e.target.value;
+  document.getElementById('htmlRoot').lang = currentLang;
+  applyStaticText();
+  if (window.storage) {
+    try { await window.storage.set('lang', currentLang); } catch(e){}
+  }
+});
+
+// ================= App logic =================
+const SKIN_META = [
+  {id:1, color:'#f4dcc9', med:200},
+  {id:2, color:'#e9c8a8', med:250},
+  {id:3, color:'#d3a877', med:300},
+  {id:4, color:'#b17f4f', med:450},
+  {id:5, color:'#7a5330', med:600},
+  {id:6, color:'#3f2a18', med:1000},
+];
+
+let selectedSkin = null;
+let hourlyUv = null;
+let manualUvValue = null;
+let timerInterval = null;
+let timerState = { running:false, secondsLeft:0, totalSeconds:0, side:'back', endTime:0, warned:false };
+
+const skinGrid = document.getElementById('skinGrid');
+SKIN_META.forEach((s, i) => {
+  const btn = document.createElement('div');
+  btn.className = 'skin-btn';
+  btn.innerHTML = `<div class="swatch" style="background:${s.color}"></div>${['I','II','III','IV','V','VI'][i]}<small></small>`;
+  btn.addEventListener('click', () => {
+    selectedSkin = s;
+    document.querySelectorAll('.skin-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('skinDesc').textContent = TRANSLATIONS[currentLang].skinTypes[i].desc;
+    refreshTimerIfReady();
+  });
+  skinGrid.appendChild(btn);
+});
+
+async function loadUvForCoords(lat, lon, label){
+  const status = document.getElementById('locStatus');
+  status.textContent = t('fetchingUv', {label});
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&timezone=auto&forecast_days=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const times = data.hourly.time;
+    const uvs = data.hourly.uv_index;
+    hourlyUv = times.map((tm,i)=>({time:new Date(tm), uv:uvs[i]}));
+    manualUvValue = null;
+    status.textContent = t('uvLoaded', {label});
+    drawArc();
+    refreshTimerIfReady();
+  } catch(e) {
+    status.textContent = t('uvDownloadFailed');
+  }
+}
+
+document.getElementById('btnLoc').addEventListener('click', () => {
+  const status = document.getElementById('locStatus');
+  status.textContent = t('requestingLocation');
+  if (!navigator.geolocation) {
+    status.textContent = t('geoUnavailable');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition((pos) => {
+    const {latitude, longitude} = pos.coords;
+    loadUvForCoords(latitude, longitude, t('locationFound', {lat:latitude.toFixed(2), lon:longitude.toFixed(2)}));
+  }, () => {
+    status.textContent = t('locationDenied');
+  });
+});
+
+document.getElementById('btnCitySearch').addEventListener('click', async () => {
+  const q = document.getElementById('citySearch').value.trim();
+  const resultsBox = document.getElementById('cityResults');
+  const status = document.getElementById('locStatus');
+  resultsBox.innerHTML = '';
+  if (!q) return;
+  status.textContent = t('searchingCities');
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) {
+      status.textContent = t('noCitiesFound');
+      return;
+    }
+    status.textContent = t('selectCity');
+    data.results.forEach(r => {
+      const btn = document.createElement('div');
+      btn.className = 'city-option';
+      const region = r.admin1 ? `${r.admin1}, ` : '';
+      btn.textContent = `${r.name}, ${region}${r.country}`;
+      btn.addEventListener('click', () => {
+        resultsBox.innerHTML = '';
+        document.getElementById('citySearch').value = `${r.name}, ${r.country}`;
+        loadUvForCoords(r.latitude, r.longitude, `${r.name}, ${r.country}.`);
+      });
+      resultsBox.appendChild(btn);
+    });
+  } catch(e) {
+    status.textContent = t('citySearchFailed');
+  }
+});
+
+document.getElementById('btnManual').addEventListener('click', () => {
+  document.getElementById('manualRow').classList.remove('hidden');
+});
+document.getElementById('btnManualGo').addEventListener('click', () => {
+  const v = parseFloat(document.getElementById('manualUv').value);
+  if (isNaN(v) || v < 0) return;
+  manualUvValue = v;
+  hourlyUv = null;
+  document.getElementById('arcCard').classList.add('hidden');
+  document.getElementById('locStatus').textContent = t('manualUvSet', {v});
+  refreshTimerIfReady();
+});
+
+function drawArc(){
+  if (!hourlyUv) return;
+  const card = document.getElementById('arcCard');
+  card.classList.remove('hidden');
+  const svg = document.getElementById('arcSvg');
+  svg.innerHTML = '';
+  const daylight = hourlyUv.filter(h => h.time.getHours() >= 6 && h.time.getHours() <= 20);
+  const maxUv = Math.max(...daylight.map(h=>h.uv), 1);
+  const w = 400, h = 140, padX = 10, padY = 20;
+  const n = daylight.length;
+  const barW = (w - padX*2) / n;
+  const now = new Date();
+
+  daylight.forEach((pt, i) => {
+    const bh = (pt.uv / maxUv) * (h - padY - 20);
+    const x = padX + i*barW;
+    const y = h - padY - bh;
+    const color = pt.uv >= 8 ? '#e5533d' : pt.uv >= 6 ? '#f2a93b' : pt.uv >=3 ? '#e6c25a' : '#5fb98c';
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', x+1);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', Math.max(barW-2,1));
+    rect.setAttribute('height', bh);
+    rect.setAttribute('rx', 2);
+    rect.setAttribute('fill', color);
+    const isNow = Math.abs(pt.time - now) < 30*60*1000;
+    if (isNow) rect.setAttribute('stroke', '#f6f1e4'), rect.setAttribute('stroke-width','1.5');
+    svg.appendChild(rect);
+  });
+}
+
+function minutesPerSide(uv, skin){
+  if (!uv || uv <= 0) return 45;
+  const timeToMed = skin.med / (1.5 * uv);
+  return Math.max(3, Math.round(timeToMed * 0.65));
+}
+
+function currentUv(){
+  if (manualUvValue !== null) return manualUvValue;
+  if (hourlyUv) {
+    const now = new Date();
+    let closest = hourlyUv[0];
+    let diff = Infinity;
+    hourlyUv.forEach(h => {
+      const d = Math.abs(h.time - now);
+      if (d < diff) { diff = d; closest = h; }
+    });
+    return closest.uv;
+  }
+  return null;
+}
+
+function refreshTimerIfReady(){
+  const uv = currentUv();
+  const timerCard = document.getElementById('timerCard');
+  if (selectedSkin && uv !== null) {
+    timerCard.classList.remove('hidden');
+    const mins = minutesPerSide(uv, selectedSkin);
+    document.getElementById('uvNowPill').textContent = `UV ${uv}`;
+    document.getElementById('segTag').textContent = t('segTag', {mins});
+    if (!timerState.running && timerState.totalSeconds !== mins*60) {
+      timerState.totalSeconds = mins*60;
+      timerState.secondsLeft = mins*60;
+      updateTimerDisplay();
+    }
+  }
+}
+
+const RING_CIRC = 2 * Math.PI * 98;
+document.getElementById('progressRing').setAttribute('stroke-dasharray', RING_CIRC);
+
+function updateTimerDisplay(){
+  const m = Math.floor(timerState.secondsLeft/60).toString().padStart(2,'0');
+  const s = (timerState.secondsLeft%60).toString().padStart(2,'0');
+  document.getElementById('timeLeft').textContent = `${m}:${s}`;
+  document.getElementById('sideLabel').textContent = timerState.side === 'back' ? t('sideBack') : t('sideFront');
+  const frac = timerState.totalSeconds ? (timerState.secondsLeft/timerState.totalSeconds) : 1;
+  const offset = RING_CIRC * (1-frac);
+  document.getElementById('progressRing').setAttribute('stroke-dashoffset', offset);
+}
+
+function beep(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.2, ctx.currentTime);
+    o.start();
+    o.stop(ctx.currentTime + 0.35);
+  } catch(e){}
+  if (navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+
+function warnBeep(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 523;
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    o.start();
+    o.stop(ctx.currentTime + 0.2);
+  } catch(e){}
+  if (navigator.vibrate) navigator.vibrate([120]);
+}
+
+let wakeLock = null;
+let notifPermission = 'default';
+let statusNotifTimer = null;
+
+async function ensureNotifPermission(){
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') { notifPermission = 'granted'; return true; }
+  if (Notification.permission === 'denied') { notifPermission = 'denied'; return false; }
+  const res = await Notification.requestPermission();
+  notifPermission = res;
+  return res === 'granted';
+}
+
+async function sendNotification(title, body, {silent=false, vibrate=[150]} = {}){
+  if (notifPermission !== 'granted') return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      reg.showNotification(title, { body, tag:'timer-status', renotify:!silent, silent, vibrate, icon:'./icon-192.png' });
+    } else {
+      new Notification(title, { body, silent });
+    }
+  } catch(e){}
+}
+
+function currentSideLabel(){
+  return timerState.side === 'back' ? t('sideBack') : t('sideFront');
+}
+function nextSideLabel(){
+  return timerState.side === 'back' ? t('sideFront') : t('sideBack');
+}
+
+function updateStatusNotification(){
+  if (notifPermission !== 'granted' || !timerState.running) return;
+  const mins = Math.floor(timerState.secondsLeft/60).toString().padStart(2,'0');
+  const secs = (timerState.secondsLeft%60).toString().padStart(2,'0');
+  sendNotification(t('notifStatusTitle'), t('notifStatusBody', {side:currentSideLabel(), time:`${mins}:${secs}`}), {silent:true});
+  if ('setAppBadge' in navigator) {
+    navigator.setAppBadge(Math.max(1, Math.ceil(timerState.secondsLeft/60))).catch(()=>{});
+  }
+}
+
+function clearStatusNotification(){
+  if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg => reg.getNotifications({tag:'timer-status'}).then(list => list.forEach(n=>n.close())));
+  }
+}
+
+async function requestWakeLock(){
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch(e) {}
+}
+function releaseWakeLock(){
+  if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && timerState.running) {
+    tick();
+    requestWakeLock();
+  }
+});
+
+function tick(){
+  const remainingMs = timerState.endTime - Date.now();
+  const remainingSec = Math.max(0, Math.round(remainingMs/1000));
+
+  if (timerState.totalSeconds > 60 && remainingSec <= 60 && !timerState.warned) {
+    timerState.warned = true;
+    warnBeep();
+    document.getElementById('timerNote').textContent = t('flipWarningNote', {side:nextSideLabel()});
+    sendNotification(t('notifWarningTitle'), t('notifWarningBody', {side:nextSideLabel()}), {silent:false, vibrate:[120]});
+  }
+
+  timerState.secondsLeft = remainingSec;
+  updateTimerDisplay();
+
+  if (remainingSec <= 0) {
+    beep();
+    sendNotification(t('notifFlipTitle'), t('notifFlipBody', {side:nextSideLabel()}), {silent:false, vibrate:[200,100,200]});
+    flipSide();
+  }
+}
+
+function flipSide(){
+  timerState.side = timerState.side === 'back' ? 'front' : 'back';
+  timerState.secondsLeft = timerState.totalSeconds;
+  timerState.endTime = Date.now() + timerState.totalSeconds*1000;
+  timerState.warned = false;
+  updateTimerDisplay();
+  document.getElementById('timerNote').textContent = t('flippedNote', {side:currentSideLabel()});
+}
+
+document.getElementById('btnStartPause').addEventListener('click', async (e) => {
+  if (!selectedSkin || currentUv() === null) {
+    document.getElementById('timerNote').textContent = t('selectSkinFirst');
+    return;
+  }
+  timerState.running = !timerState.running;
+  e.target.textContent = timerState.running ? t('btnPause') : t('btnResume');
+  if (timerState.running) {
+    await ensureNotifPermission();
+    timerState.endTime = Date.now() + timerState.secondsLeft*1000;
+    timerState.warned = false;
+    requestWakeLock();
+    timerInterval = setInterval(tick, 1000);
+    updateStatusNotification();
+    statusNotifTimer = setInterval(updateStatusNotification, 30000);
+  } else {
+    clearInterval(timerInterval);
+    clearInterval(statusNotifTimer);
+    releaseWakeLock();
+    clearStatusNotification();
+  }
+});
+
+document.getElementById('btnFlipNow').addEventListener('click', () => {
+  flipSide();
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  clearInterval(statusNotifTimer);
+  releaseWakeLock();
+  clearStatusNotification();
+  timerState.running = false;
+  timerState.side = 'back';
+  timerState.secondsLeft = timerState.totalSeconds;
+  timerState.warned = false;
+  document.getElementById('btnStartPause').textContent = t('btnStart');
+  document.getElementById('timerNote').textContent = '';
+  updateTimerDisplay();
+});
+
+(async function init(){
+  const saved = await loadSavedLang();
+  currentLang = saved || detectLang();
+  document.getElementById('langSelect').value = currentLang;
+  document.getElementById('htmlRoot').lang = currentLang;
+  applyStaticText();
+  updateTimerDisplay();
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
