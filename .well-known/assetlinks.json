@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.alessio.tanningtimer",
+    "sha256_cert_fingerprints": ["24:06:DA:0D:8F:11:B5:15:AE:1D:7B:9B:1E:90:8A:8D:CA:AD:9B:28:7E:9D:EE:E3:60:E3:0D:D9:E7:07:8F:48"]
+  }
+}]
